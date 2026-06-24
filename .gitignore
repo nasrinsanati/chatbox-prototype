@@ -1,0 +1,14 @@
+# Virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# Logs
+*.log
+chatbox_logs.jsonl
+
+# OS files
+.DS_Store

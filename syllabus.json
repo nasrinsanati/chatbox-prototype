@@ -1,0 +1,14 @@
+{
+  "course_name": "EdTech Research Methods",
+  "instructor": "Dr. Rene Corbeil",
+  "deadlines": {
+    "Assignment 1": "2026-09-20",
+    "Midterm Exam": "2026-10-15",
+    "Final Project Proposal": "2026-11-10"
+  },
+  "policies": "Late work accepted up to 3 days with 10% penalty per day. Extensions require prior approval.",
+  "resources": {
+    "research methods": "https://www.sagepub.com/research-methods",
+    "literature review": "https://www.scribbr.com/dissertation/literature-review/"
+  }
+}
