@@ -56,7 +56,11 @@ CRITICAL RULES:
 def run_chatbox(user_input: str, thread_id: str = "default"):
     history = get_session_history(thread_id)
     
-    messages = [system_prompt] + history.messages + [HumanMessage(content=user_input)]
+    # Get extracted text if available
+    extracted_text = st.session_state.get('extracted_syllabus_text', '')
+    context = f"\n\nExtracted Syllabus Content:\n{extracted_text[:4000]}" if extracted_text else ""
+    
+    messages = [system_prompt] + history.messages + [HumanMessage(content=user_input + context)]
     
     response = llm_with_tools.invoke(messages)
     
@@ -80,7 +84,11 @@ def run_chatbox(user_input: str, thread_id: str = "default"):
             messages.append(HumanMessage(content=f"Tool result: {tool_result}"))
             response = llm_with_tools.invoke(messages)
     
-    final_response = response.content if hasattr(response, 'content') else str(response)
+    # Force clean text
+    if hasattr(response, 'content'):
+        final_response = response.content
+    else:
+        final_response = str(response)
     
     # Log
     log_interaction(thread_id, user_input, final_response, tool_used)
