@@ -96,7 +96,8 @@ if prompt := st.chat_input("Type your question here..."):
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = run_chatbox(prompt)
+            extracted_text = st.session_state.get('extracted_syllabus_text', '')
+            response = run_chatbox(prompt, extracted_text)
             st.markdown(response)
     
     st.session_state.messages.append({"role": "assistant", "content": response})

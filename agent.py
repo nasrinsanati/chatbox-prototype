@@ -53,11 +53,9 @@ CRITICAL RULES:
 - Be encouraging after giving facts.
 """)
 
-def run_chatbox(user_input: str, thread_id: str = "default"):
+def run_chatbox(user_input: str, extracted_text: str = "", thread_id: str = "default"):
     history = get_session_history(thread_id)
     
-    # Get extracted text if available
-    extracted_text = st.session_state.get('extracted_syllabus_text', '')
     context = f"\n\nExtracted Syllabus Content:\n{extracted_text[:4000]}" if extracted_text else ""
     
     messages = [system_prompt] + history.messages + [HumanMessage(content=user_input + context)]
