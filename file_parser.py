@@ -1,4 +1,4 @@
-# file_parser.py - Final Recommended Version
+# file_parser.py - Final Clean Version
 import pdfplumber
 from pypdf import PdfReader
 from docx import Document
@@ -6,27 +6,23 @@ import streamlit as st
 import re
 
 def clean_extracted_text(text: str) -> str:
-    """
-    Clean and normalize extracted text.
-    Removes excessive whitespace and improves readability.
-    """
+    """Clean and normalize extracted text"""
     if not text:
         return ""
     
-    # Collapse multiple newlines into max 2
+    # Remove excessive newlines
     text = re.sub(r'\n{3,}', '\n\n', text)
-    
-    # Collapse multiple spaces into single space
+    # Remove excessive spaces
     text = re.sub(r' {2,}', ' ', text)
     
-    # Remove lines that are too short or look like artifacts
+    # Remove very short artifact lines
     lines = [line.strip() for line in text.split('\n') if len(line.strip()) > 2]
     
     return '\n'.join(lines).strip()
 
 
 def extract_text_from_pdf(uploaded_file):
-    """Extract text from PDF using pdfplumber (with pypdf fallback)"""
+    """Extract text from PDF (pdfplumber + pypdf fallback)"""
     try:
         text = ""
         with pdfplumber.open(uploaded_file) as pdf:
@@ -37,8 +33,7 @@ def extract_text_from_pdf(uploaded_file):
         return clean_extracted_text(text)
     
     except Exception as e:
-        st.warning(f"pdfplumber failed, falling back to pypdf: {e}")
-        
+        st.warning(f"pdfplumber failed, using pypdf fallback: {e}")
         try:
             reader = PdfReader(uploaded_file)
             text = ""
@@ -53,7 +48,7 @@ def extract_text_from_pdf(uploaded_file):
 
 
 def extract_text_from_docx(uploaded_file):
-    """Extract text from DOCX file"""
+    """Extract text from DOCX"""
     try:
         doc = Document(uploaded_file)
         text = ""

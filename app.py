@@ -1,10 +1,9 @@
-# app.py - Full Version with RAG Support for PDF/DOCX
+# app.py - Simplified & Clean Version (Best Performance)
 import streamlit as st
 from agent import run_chatbox
 import json
 from datetime import datetime
 from file_parser import extract_text_from_pdf, extract_text_from_docx
-from rag_utils import chunk_syllabus
 
 st.set_page_config(page_title="Chatbox - Course Advisor", page_icon="📚")
 st.title("📚 Chatbox - Your Course Advisor")
@@ -14,18 +13,18 @@ st.caption("Ask me anything about the syllabus, deadlines, policies, or course t
 with st.sidebar:
     st.header("Faculty Tools")
     
-    # PDF / DOCX Uploader with RAG
+    # PDF / DOCX Uploader
     st.subheader("Upload Syllabus (PDF or DOCX)")
     uploaded_file = st.file_uploader(
         "Upload your syllabus file", 
         type=["pdf", "docx"],
-        help="Upload PDF or Word document. The text will be chunked and indexed automatically."
+        help="Upload PDF or Word document. Text will be extracted automatically."
     )
     
     if uploaded_file is not None:
         file_type = uploaded_file.name.split(".")[-1].lower()
         
-        with st.spinner("Processing syllabus..."):
+        with st.spinner("Extracting text from document..."):
             if file_type == "pdf":
                 extracted_text = extract_text_from_pdf(uploaded_file)
             elif file_type == "docx":
@@ -34,20 +33,21 @@ with st.sidebar:
                 extracted_text = ""
         
         if extracted_text:
-            # Chunk the syllabus for RAG
-            chunks = chunk_syllabus(extracted_text)
-            st.session_state.syllabus_chunks = chunks
-            st.session_state.extracted_syllabus_text = extracted_text  # keep full text too
-            
-            st.success(f"✅ Syllabus processed! ({len(chunks)} chunks created)")
+            st.session_state.extracted_syllabus_text = extracted_text
+            st.success("✅ Syllabus uploaded successfully!")
             
             with st.expander("📄 View Extracted Text", expanded=False):
-                st.text_area("Extracted Content", extracted_text, height=350, disabled=True)
-                st.caption(f"Total characters: {len(extracted_text):,}")
+                st.text_area(
+                    label="Extracted Content",
+                    value=extracted_text,
+                    height=450,
+                    disabled=True
+                )
+                st.caption(f"Total characters extracted: {len(extracted_text):,}")
         else:
             st.error("Could not extract text from the file.")
     
-    # JSON Uploader (Backup)
+    # JSON Uploader (Backup Option)
     st.divider()
     st.subheader("Or upload as JSON")
     json_file = st.file_uploader("Upload Syllabus (JSON)", type=["json"], key="json_uploader")
@@ -56,6 +56,7 @@ with st.sidebar:
             syllabus = json.load(json_file)
             st.session_state.syllabus = syllabus
             st.success("JSON Syllabus uploaded!")
+            st.json(syllabus, expanded=False)
         except Exception as e:
             st.error(f"Invalid JSON file: {str(e)}")
 
@@ -102,8 +103,8 @@ if prompt := st.chat_input("Type your question here..."):
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            chunks = st.session_state.get('syllabus_chunks', [])
-            response = run_chatbox(prompt, chunks)
+            extracted_text = st.session_state.get('extracted_syllabus_text', '')
+            response = run_chatbox(prompt, extracted_text)
             st.markdown(response)
     
     st.session_state.messages.append({"role": "assistant", "content": response})
