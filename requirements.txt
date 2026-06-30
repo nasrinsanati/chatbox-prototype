@@ -4,5 +4,7 @@ langchain-community
 streamlit
 python-dotenv
 
-pypdf
+# PDF / DOCX support (NEW)
+pdfplumber
+pypdf          # kept as fallback
 python-docx
