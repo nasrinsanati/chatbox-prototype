@@ -1,4 +1,4 @@
-# agent.py - Final Improved Version (Large Context)
+# agent.py - Updated with Larger Context (18,000 characters)
 from langchain_xai import ChatXAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.chat_message_histories import ChatMessageHistory
@@ -40,20 +40,20 @@ def run_chatbox(user_input: str, extracted_text: str = "", thread_id: str = "def
     history = get_session_history(thread_id)
     
     if extracted_text and len(extracted_text) > 50:
-        # Use large context from uploaded syllabus
-        context = f"\n\n=== FULL SYLLABUS CONTENT ===\n{extracted_text[:16000]}"
+        # Increased context window
+        context = f"\n\n=== FULL SYLLABUS CONTENT ===\n{extracted_text[:18000]}"
         
         system_prompt = SystemMessage(content="""
 You are Chatbox, a helpful and accurate Course Advisor.
 
-You have been given a large portion of the official course syllabus below.
-Your job is to answer questions **as accurately as possible using only the provided syllabus text**.
+You have been given a large portion of the official course syllabus.
+Answer questions **as accurately and specifically as possible** using only the provided syllabus text.
 
-Rules:
+Guidelines:
 - If the answer exists in the syllabus, use it directly and be specific.
-- Quote relevant sections when helpful.
-- If the information is not in the syllabus, clearly say so.
-- Do not make up information or use external knowledge.
+- Quote or reference relevant sections when helpful.
+- If the information is clearly not in the syllabus, say so politely.
+- Do not make up or assume information.
 """)
         
         messages = [system_prompt] + history.messages + [HumanMessage(content=user_input + context)]
@@ -67,8 +67,7 @@ Rules:
         return final_response
     
     else:
-        # No syllabus uploaded
-        final_response = "Please upload your course syllabus (PDF or DOCX) first so I can give you accurate answers based on your specific course."
+        final_response = "Please upload your course syllabus (PDF or DOCX) first so I can give accurate answers based on your specific course."
         
         log_interaction(thread_id, user_input, final_response)
         history.add_user_message(user_input)
