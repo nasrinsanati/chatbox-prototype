@@ -1,4 +1,4 @@
-# file_parser.py - Improved Version with Page Markers + Better Table Handling
+# file_parser.py - Final Recommended Version
 import pdfplumber
 from pypdf import PdfReader
 from docx import Document
@@ -6,14 +6,17 @@ import streamlit as st
 import re
 
 def clean_extracted_text(text: str) -> str:
-    """Clean and normalize extracted text"""
+    """
+    Clean and normalize extracted text.
+    Removes excessive whitespace and improves readability.
+    """
     if not text:
         return ""
     
-    # Remove excessive newlines (keep max 2)
+    # Collapse multiple newlines into max 2
     text = re.sub(r'\n{3,}', '\n\n', text)
     
-    # Remove excessive spaces
+    # Collapse multiple spaces into single space
     text = re.sub(r' {2,}', ' ', text)
     
     # Remove very short artifact lines
@@ -24,28 +27,26 @@ def clean_extracted_text(text: str) -> str:
 
 def extract_text_from_pdf(uploaded_file):
     """
-    Extract text from PDF with page markers and better table handling.
-    Uses pdfplumber as primary extractor.
+    Extract text from PDF with page markers and table handling.
+    Uses pdfplumber as the primary extractor.
     """
     try:
         text = ""
         with pdfplumber.open(uploaded_file) as pdf:
             for i, page in enumerate(pdf.pages, start=1):
-                page_text = page.extract_text()
-                
                 # Add page marker
                 text += f"\n\n[Page {i}]\n"
                 
+                page_text = page.extract_text()
                 if page_text:
                     text += page_text + "\n"
                 
-                # Try to extract tables as readable text
+                # Extract tables in a readable format
                 tables = page.extract_tables()
                 if tables:
                     for table in tables:
                         text += "\n[Table]\n"
                         for row in table:
-                            # Clean row and join cells
                             clean_row = [str(cell).strip() if cell else "" for cell in row]
                             text += " | ".join(clean_row) + "\n"
                         text += "[/Table]\n"
@@ -60,8 +61,8 @@ def extract_text_from_pdf(uploaded_file):
             reader = PdfReader(uploaded_file)
             text = ""
             for i, page in enumerate(reader.pages, start=1):
-                page_text = page.extract_text()
                 text += f"\n\n[Page {i}]\n"
+                page_text = page.extract_text()
                 if page_text:
                     text += page_text + "\n"
             return clean_extracted_text(text)
