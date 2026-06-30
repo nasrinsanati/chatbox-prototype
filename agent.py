@@ -56,10 +56,10 @@ CRITICAL RULES:
 def run_chatbox(user_input: str, extracted_text: str = "", thread_id: str = "default"):
     history = get_session_history(thread_id)
     
-    context = f"\n\nExtracted Syllabus Content:\n{extracted_text[:4000]}" if extracted_text else ""
+    # Increased from 4000 → 10000 characters
+    context = f"\n\n=== EXTRACTED SYLLABUS CONTENT ===\n{extracted_text[:10000]}" if extracted_text else ""
     
     messages = [system_prompt] + history.messages + [HumanMessage(content=user_input + context)]
-    
     response = llm_with_tools.invoke(messages)
     
     tool_used = None
