@@ -3,7 +3,7 @@ import streamlit as st
 from agent import run_chatbox
 import json
 from datetime import datetime
-from file_parser import extract_text_from_pdf, extract_text_from_docx   # NEW IMPORT
+from file_parser import extract_text_from_pdf, extract_text_from_docx
 
 st.set_page_config(page_title="Chatbox - Course Advisor", page_icon="📚")
 st.title("📚 Chatbox - Your Course Advisor")
@@ -13,12 +13,12 @@ st.caption("Ask me anything about the syllabus, deadlines, policies, or course t
 with st.sidebar:
     st.header("Faculty Tools")
     
-    # === PDF / DOCX Uploader (New) ===
+    # PDF / DOCX Uploader
     st.subheader("Upload Syllabus (PDF or DOCX)")
     uploaded_file = st.file_uploader(
         "Upload your syllabus file", 
         type=["pdf", "docx"],
-        help="PDF or Word document. Text will be extracted automatically."
+        help="Upload PDF or Word document. Text will be extracted automatically."
     )
     
     if uploaded_file is not None:
@@ -35,12 +35,20 @@ with st.sidebar:
         if extracted_text:
             st.session_state.extracted_syllabus_text = extracted_text
             st.success("✅ Syllabus uploaded and text extracted successfully!")
-            with st.expander("View extracted text"):
-                st.text_area("Extracted Content", extracted_text[:3000] + "...", height=200)
+            
+            # Improved Preview
+            with st.expander("📄 View Extracted Text", expanded=False):
+                st.text_area(
+                    label="Extracted Content",
+                    value=extracted_text,
+                    height=400,
+                    disabled=True
+                )
+                st.caption(f"Total characters extracted: {len(extracted_text):,}")
         else:
             st.error("Could not extract text from the file.")
     
-    # Optional: JSON uploader as backup
+    # JSON Uploader (Backup)
     st.divider()
     st.subheader("Or upload as JSON")
     json_file = st.file_uploader("Upload Syllabus (JSON)", type=["json"], key="json_uploader")
@@ -101,4 +109,3 @@ if prompt := st.chat_input("Type your question here..."):
             st.markdown(response)
     
     st.session_state.messages.append({"role": "assistant", "content": response})
-    
