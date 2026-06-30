@@ -4,7 +4,11 @@ langchain-community
 streamlit
 python-dotenv
 
-# PDF / DOCX support (NEW)
+# PDF & DOCX Support
 pdfplumber
-pypdf          # kept as fallback
+pypdf
 python-docx
+
+# RAG (Chunking + Embeddings)
+langchain-text-splitters
+sentence-transformers
