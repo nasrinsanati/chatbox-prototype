@@ -1,4 +1,4 @@
-# app.py - Simplified & Clean Version (Best Performance)
+# app.py - Final Clean Version
 import streamlit as st
 from agent import run_chatbox
 import json
@@ -47,7 +47,7 @@ with st.sidebar:
         else:
             st.error("Could not extract text from the file.")
     
-    # JSON Uploader (Backup Option)
+    # JSON Uploader (Backup)
     st.divider()
     st.subheader("Or upload as JSON")
     json_file = st.file_uploader("Upload Syllabus (JSON)", type=["json"], key="json_uploader")
