@@ -1,4 +1,4 @@
-# agent.py - Updated with Larger Context (18,000 characters)
+# agent.py - Improved Version (20k Context + Stronger Prompt)
 from langchain_xai import ChatXAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.chat_message_histories import ChatMessageHistory
@@ -40,20 +40,22 @@ def run_chatbox(user_input: str, extracted_text: str = "", thread_id: str = "def
     history = get_session_history(thread_id)
     
     if extracted_text and len(extracted_text) > 50:
-        # Increased context window
-        context = f"\n\n=== FULL SYLLABUS CONTENT ===\n{extracted_text[:18000]}"
+        # Increased to 20,000 characters
+        context = f"\n\n=== FULL SYLLABUS CONTENT ===\n{extracted_text[:20000]}"
         
         system_prompt = SystemMessage(content="""
-You are Chatbox, a helpful and accurate Course Advisor.
+You are Chatbox, a precise and helpful Course Advisor.
 
-You have been given a large portion of the official course syllabus.
-Answer questions **as accurately and specifically as possible** using only the provided syllabus text.
+You have been given a large portion of the official course syllabus below.
 
-Guidelines:
-- If the answer exists in the syllabus, use it directly and be specific.
-- Quote or reference relevant sections when helpful.
-- If the information is clearly not in the syllabus, say so politely.
-- Do not make up or assume information.
+Your task is to answer questions **as accurately and thoroughly as possible** using ONLY the provided syllabus text.
+
+Important Rules:
+- Carefully read the entire syllabus content before answering.
+- If the answer exists anywhere in the syllabus (even in later sections), use it.
+- Be specific and quote relevant parts when helpful.
+- If the information is truly not in the syllabus, clearly say so.
+- Do not make up information or use external knowledge.
 """)
         
         messages = [system_prompt] + history.messages + [HumanMessage(content=user_input + context)]
@@ -67,7 +69,7 @@ Guidelines:
         return final_response
     
     else:
-        final_response = "Please upload your course syllabus (PDF or DOCX) first so I can give accurate answers based on your specific course."
+        final_response = "Please upload your course syllabus (PDF or DOCX) first so I can give you accurate answers based on your specific course."
         
         log_interaction(thread_id, user_input, final_response)
         history.add_user_message(user_input)
