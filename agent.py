@@ -57,8 +57,8 @@ def run_chatbox(user_input: str, extracted_text: str = "", thread_id: str = "def
     history = get_session_history(thread_id)
     
     if extracted_text:
-        # MAXIMUM context (increased to 20,000 characters)
-        context = f"\n\n=== FULL SYLLABUS CONTENT ===\n{extracted_text[:20000]}"
+        # MAXIMUM safe context (25,000 characters)
+        context = f"\n\n=== FULL SYLLABUS CONTENT ===\n{extracted_text[:25000]}"
         
         system_prompt = SystemMessage(content="""
 You are Chatbox, a precise and thorough Course Advisor.
