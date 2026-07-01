@@ -43,7 +43,7 @@ with st.sidebar:
                 st.text_area(
                     label="Extracted Content",
                     value=extracted_text,
-                    height=550,
+                    height=700,
                     disabled=True
                 )
                 st.caption(f"Total characters extracted: {len(extracted_text):,}")

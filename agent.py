@@ -57,8 +57,8 @@ def run_chatbox(user_input: str, extracted_text: str = "", thread_id: str = "def
     history = get_session_history(thread_id)
     
     if extracted_text:
-        # Increased from 10,000 → 15,000 characters
-        context = f"\n\n=== FULL SYLLABUS CONTENT ===\n{extracted_text[:15000]}"
+        # MAXIMUM context (increased to 20,000 characters)
+        context = f"\n\n=== FULL SYLLABUS CONTENT ===\n{extracted_text[:20000]}"
         
         system_prompt = SystemMessage(content="""
 You are Chatbox, a precise and thorough Course Advisor.
@@ -67,7 +67,7 @@ You have been given a large portion of the official course syllabus below.
 
 Your task:
 - Answer questions as accurately as possible using **only** the provided syllabus content.
-- Carefully check the **entire** syllabus text before answering (including later sections).
+- Carefully check the **entire** syllabus text (including later sections and tables) before answering.
 - If the answer exists anywhere in the syllabus, use it and be specific.
 - If the information is not in the syllabus, clearly say so.
 - Do not make up information.
