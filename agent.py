@@ -1,4 +1,4 @@
-# agent.py - Updated Version (Prioritizes Raw Text)
+# agent.py - Simple Large Context Version
 from langchain_xai import ChatXAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.chat_message_histories import ChatMessageHistory
@@ -8,7 +8,7 @@ from datetime import datetime
 
 load_dotenv()
 
-llm = ChatXAI(model="grok-4", temperature=0.7, max_tokens=900)
+llm = ChatXAI(model="grok-4", temperature=0.7, max_tokens=800)
 
 store = {}
 
@@ -29,45 +29,23 @@ def log_interaction(session_id: str, user_input: str, response_text: str):
     with open(LOG_FILE, "a") as f:
         f.write(json.dumps(log_entry) + "\n")
 
-def run_chatbox(user_input: str, raw_text: str = "", structured_data: dict = None, thread_id: str = "default"):
+BASE_SYSTEM_PROMPT = """
+You are Chatbox, a friendly and encouraging Course Advisor.
+Be supportive and practical.
+"""
+
+def run_chatbox(user_input: str, extracted_text: str = "", thread_id: str = "default"):
     history = get_session_history(thread_id)
     
-    # === Priority 1: Use Raw Syllabus Text (More Reliable) ===
-    if raw_text and len(raw_text) > 100:
-        context = f"\n\n=== FULL SYLLABUS CONTENT ===\n{raw_text[:20000]}"
+    if extracted_text:
+        # Large context (increased from 4000 → 12000)
+        context = f"\n\n=== SYLLABUS CONTENT ===\n{extracted_text[:12000]}"
         
-        system_prompt = SystemMessage(content="""
-You are Chatbox, a precise and thorough Course Advisor.
+        system_prompt = SystemMessage(content=f"""{BASE_SYSTEM_PROMPT}
 
-You have been given the FULL syllabus content below.
-
-Your task is to answer questions as accurately as possible using ONLY the provided syllabus text.
-
-Important Rules:
-- Carefully read the entire syllabus content before answering.
-- If the answer exists anywhere in the syllabus (even in tables, later pages, or the Course Schedule), use it.
-- Be specific and quote relevant sections when helpful.
-- If the information is truly not in the syllabus, clearly say so.
-- Do not make up information or use external knowledge.
-""")
-        
-        messages = [system_prompt] + history.messages + [HumanMessage(content=user_input + context)]
-        response = llm.invoke(messages)
-        
-        final_response = response.content if hasattr(response, 'content') else str(response)
-        
-        log_interaction(thread_id, user_input, final_response)
-        history.add_user_message(user_input)
-        history.add_ai_message(final_response)
-        return final_response
-    
-    # === Priority 2: Fallback to Structured Data (if raw text is missing) ===
-    elif structured_data:
-        context = f"\n\n=== STRUCTURED SYLLABUS DATA ===\n{json.dumps(structured_data, indent=2)}"
-        
-        system_prompt = SystemMessage(content="""
-You are Chatbox, a precise and helpful Course Advisor.
-Use the structured syllabus data below to answer questions accurately.
+You have been given a large portion of the course syllabus.
+Answer questions as accurately as possible using the provided syllabus content.
+If the information is not in the syllabus, clearly say so.
 """)
         
         messages = [system_prompt] + history.messages + [HumanMessage(content=user_input + context)]
@@ -81,7 +59,7 @@ Use the structured syllabus data below to answer questions accurately.
         return final_response
     
     else:
-        final_response = "Please upload your course syllabus (PDF or DOCX) first so I can give you accurate answers."
+        final_response = "Please upload your course syllabus (PDF or DOCX) first so I can give accurate answers."
         log_interaction(thread_id, user_input, final_response)
         history.add_user_message(user_input)
         history.add_ai_message(final_response)
