@@ -1,4 +1,4 @@
-# file_parser.py - Final Clean Version
+# file_parser.py - Clean Stable Version
 import pdfplumber
 from pypdf import PdfReader
 from docx import Document
@@ -6,19 +6,15 @@ import streamlit as st
 import re
 
 def clean_extracted_text(text: str) -> str:
-    """Clean and normalize extracted text"""
     if not text:
         return ""
-    
     text = re.sub(r'\n{3,}', '\n\n', text)
     text = re.sub(r' {2,}', ' ', text)
-    
     lines = [line.strip() for line in text.split('\n') if len(line.strip()) > 2]
     return '\n'.join(lines).strip()
 
 
 def extract_text_from_pdf(uploaded_file):
-    """Extract text from PDF using pdfplumber (with pypdf fallback)"""
     try:
         text = ""
         with pdfplumber.open(uploaded_file) as pdf:
@@ -27,7 +23,6 @@ def extract_text_from_pdf(uploaded_file):
                 if page_text:
                     text += page_text + "\n\n"
         return clean_extracted_text(text)
-    
     except Exception as e:
         st.warning(f"pdfplumber failed, falling back to pypdf: {e}")
         try:
@@ -44,7 +39,6 @@ def extract_text_from_pdf(uploaded_file):
 
 
 def extract_text_from_docx(uploaded_file):
-    """Extract text from DOCX"""
     try:
         doc = Document(uploaded_file)
         text = ""

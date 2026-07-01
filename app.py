@@ -1,4 +1,4 @@
-# app.py - Clean Simple Version
+# app.py - Clean Stable Version
 import streamlit as st
 from agent import run_chatbox
 import json
@@ -20,6 +20,9 @@ with st.sidebar:
         type=["pdf", "docx"],
         help="Upload PDF or Word document. Text will be extracted automatically."
     )
+    
+    # Helpful note about PDF vs DOCX
+    st.caption("💡 **Tip:** For best accuracy on tables and due dates (such as the Course Schedule), uploading a **Word (.docx)** version of your syllabus usually gives better results than PDF.")
     
     if uploaded_file is not None:
         file_type = uploaded_file.name.split(".")[-1].lower()
