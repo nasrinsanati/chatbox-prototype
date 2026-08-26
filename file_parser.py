@@ -39,13 +39,27 @@ def extract_text_from_pdf(uploaded_file):
 
 
 def extract_text_from_docx(uploaded_file):
+    """Extract paragraphs AND tables from a Word syllabus."""
     try:
         doc = Document(uploaded_file)
-        text = ""
+        parts = []
+
         for para in doc.paragraphs:
             if para.text.strip():
-                text += para.text + "\n"
-        return clean_extracted_text(text)
+                parts.append(para.text.strip())
+
+        for t_i, table in enumerate(doc.tables, start=1):
+            rows = []
+            for row in table.rows:
+                cells = [" ".join(cell.text.split()) for cell in row.cells]
+                if any(cells):
+                    rows.append(" | ".join(cells))
+            if rows:
+                parts.append(f"\n=== TABLE {t_i} ===")
+                parts.extend(rows)
+                parts.append("=== END TABLE ===\n")
+
+        return clean_extracted_text("\n".join(parts))
     except Exception as e:
         st.error(f"DOCX extraction failed: {e}")
         return ""

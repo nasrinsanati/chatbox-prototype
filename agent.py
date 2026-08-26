@@ -9,7 +9,6 @@ from datetime import datetime
 
 load_dotenv()
 
-# Initialize Grok
 llm = ChatXAI(
     model="grok-4",
     temperature=0.7,
@@ -19,7 +18,6 @@ llm = ChatXAI(
 tools = [lookup_syllabus, recommend_resource, check_deadlines]
 llm_with_tools = llm.bind_tools(tools)
 
-# Global memory store
 store = {}
 
 def get_session_history(session_id: str):
@@ -27,7 +25,6 @@ def get_session_history(session_id: str):
         store[session_id] = ChatMessageHistory()
     return store[session_id]
 
-# Logging
 LOG_FILE = "chatbox_logs.jsonl"
 
 def log_interaction(session_id: str, user_input: str, response_text: str, tool_used: str = None):
@@ -41,71 +38,67 @@ def log_interaction(session_id: str, user_input: str, response_text: str, tool_u
     with open(LOG_FILE, "a") as f:
         f.write(json.dumps(log_entry) + "\n")
 
-# System Prompt
-system_prompt = SystemMessage(content="""
-You are Chatbox, a friendly and encouraging Course Advisor.
-Be supportive and practical. 
-
-CRITICAL RULES:
-- When the user asks about deadlines, due dates, midterms, assignments, or policies, ALWAYS use the appropriate tool immediately.
-- Do not ask for clarification if the question is clear.
-- Provide exact information from the syllabus using tools.
-- Be encouraging after giving facts.
-""")
+system_prompt = SystemMessage(content=(
+    "You are Chatbox, a friendly and encouraging Course Advisor. "
+    "Be supportive and practical. "
+    "Use the provided syllabus content first, including later sections and tables. "
+    "When the user asks about deadlines, due dates, assignments, grading, GPA, or policies, "
+    "give exact information from the syllabus. "
+    "If the answer is not in the syllabus, say so clearly. "
+    "Do not invent dates or policies."
+))
 
 def run_chatbox(user_input: str, extracted_text: str = "", thread_id: str = "default"):
     history = get_session_history(thread_id)
-    
-    if extracted_text:
-        # MAXIMUM safe context (25,000 characters)
-        context = f"\n\n=== FULL SYLLABUS CONTENT ===\n{extracted_text[:25000]}"
-        
-        system_prompt = SystemMessage(content="""
-You are Chatbox, a precise and thorough Course Advisor.
 
-You have been given a large portion of the official course syllabus below.
-
-Your task:
-- Answer questions as accurately as possible using **only** the provided syllabus content.
-- Carefully check the **entire** syllabus text (including later sections and tables) before answering.
-- If the answer exists anywhere in the syllabus, use it and be specific.
-- If the information is not in the syllabus, clearly say so.
-- Do not make up information.
-""")
-        
-        messages = [system_prompt] + history.messages + [HumanMessage(content=user_input + context)]
-        response = llm_with_tools.invoke(messages)
-        
-        tool_used = None
-        if hasattr(response, 'tool_calls') and response.tool_calls:
-            tool_used = response.tool_calls[0]["name"]
-            for tool_call in response.tool_calls:
-                tool_name = tool_call["name"]
-                args = tool_call["args"]
-                
-                if tool_name == "lookup_syllabus":
-                    tool_result = lookup_syllabus.invoke(args)
-                elif tool_name == "recommend_resource":
-                    tool_result = recommend_resource.invoke(args)
-                elif tool_name == "check_deadlines":
-                    tool_result = check_deadlines.invoke(args)
-                else:
-                    tool_result = "Tool not found."
-                
-                messages.append(response)
-                messages.append(HumanMessage(content=f"Tool result: {tool_result}"))
-                response = llm_with_tools.invoke(messages)
-        
-        final_response = response.content if hasattr(response, 'content') else str(response)
-        
-        log_interaction(thread_id, user_input, final_response, tool_used)
-        history.add_user_message(user_input)
-        history.add_ai_message(final_response)
-        return final_response
-    
-    else:
+    if not extracted_text:
         final_response = "Please upload your course syllabus (PDF or DOCX) first so I can give accurate answers."
         log_interaction(thread_id, user_input, final_response)
         history.add_user_message(user_input)
         history.add_ai_message(final_response)
         return final_response
+
+    if len(extracted_text) <= 40000:
+        syllabus_text = extracted_text
+    else:
+        syllabus_text = extracted_text[:20000] + "\n\n...\n\n" + extracted_text[-20000:]
+
+    context = "\n\n=== SYLLABUS CONTENT ===\n" + syllabus_text
+    messages = [system_prompt] + history.messages + [HumanMessage(content=user_input + context)]
+    response = llm_with_tools.invoke(messages)
+
+    tool_used = None
+    if hasattr(response, "tool_calls") and response.tool_calls:
+        tool_used = response.tool_calls[0]["name"]
+        for tool_call in response.tool_calls:
+            tool_name = tool_call["name"]
+            args = tool_call["args"]
+
+            if tool_name == "lookup_syllabus":
+                tool_result = lookup_syllabus.invoke(args)
+            elif tool_name == "recommend_resource":
+                tool_result = recommend_resource.invoke(args)
+            elif tool_name == "check_deadlines":
+                tool_result = check_deadlines.invoke(args)
+            else:
+                tool_result = "Tool not found."
+
+            messages.append(response)
+            messages.append(HumanMessage(content="Tool result: " + str(tool_result)))
+            response = llm_with_tools.invoke(messages)
+
+    final_response = response.content if hasattr(response, "content") else str(response)
+    if isinstance(final_response, list):
+        pieces = []
+        for item in final_response:
+            if isinstance(item, dict) and "text" in item:
+                pieces.append(item["text"])
+            else:
+                pieces.append(str(item))
+        final_response = "\n".join(pieces)
+
+    final_response = str(final_response)
+    log_interaction(thread_id, user_input, final_response, tool_used)
+    history.add_user_message(user_input)
+    history.add_ai_message(final_response)
+    return final_response

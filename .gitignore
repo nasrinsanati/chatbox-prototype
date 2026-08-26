@@ -11,4 +11,7 @@ __pycache__/
 chatbox_logs.jsonl
 
 # OS files
-.DS_Store
+.DS_Store.env
+venv/
+__pycache__/
+chatbox_logs.jsonl
